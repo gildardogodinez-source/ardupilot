@@ -1,1 +1,36 @@
 
+
+name: Compilar Blink LED
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compilar:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Instalar herramientas
+        run: |
+          Tools/environment_install/install-prereqs-ubuntu.sh -y
+
+      - name: Compilar Mi_Blink
+        run: |
+          source ~/.profile
+          ./waf configure --board Pixhawk6C
+          ./waf build --target examples/Mi_Blink
+
+      - name: Guardar firmware Blink
+        uses: actions/upload-artifact@v4
+        with:
+          name: Blink-Pixhawk6C
+          path: build/Pixhawk6C/examples/Mi_Blink.apj
+          if-no-files-found: error
