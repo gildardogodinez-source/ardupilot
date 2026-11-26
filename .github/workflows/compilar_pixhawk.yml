@@ -1,0 +1,43 @@
+
+name: Compilar Pixhawk
+
+on:
+  workflow_dispatch:
+    inputs:
+      board:
+        description: 'Modelo de Pixhawk'
+        required: true
+        default: 'Pixhawk6C'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  compilar:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Descargar ArduPilot
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Instalar herramientas
+        run: |
+          Tools/environment_install/install-prereqs-ubuntu.sh -y
+
+      - name: Compilar firmware
+        env:
+          BOARD: ${{ inputs.board }}
+        run: |
+          source ~/.profile
+          ./waf configure --board "$BOARD"
+          ./waf copter
+
+      - name: Guardar firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: Firmware-${{ inputs.board }}
+          path: build/${{ inputs.board }}/bin/arducopter.apj
+          if-no-files-found: error
